@@ -30,13 +30,14 @@
 HAL_StatusTypeDef RTF; // test i2c
 HAL_StatusTypeDef WTF; // test i2c	
 volatile uint8_t arrI2c[10] = {0, 0, 0};
-uint8_t arrI2c_R[4][10];
+uint8_t arrI2c_R[4][11];
 uint32_t addr;
 uint8_t arrI2c_T[4][10];
 uint8_t block;
 uint8_t lanSelect;
 uint32_t lanCurrent = 0;
 _Bool blockSetEEPROM = 0;
+_Bool I2C_HV_off = 1; 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -202,12 +203,15 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 
 	  // process high voltage button
 	  hv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
-	  if (hv != HV_state) {
+		hv = hv & !I2C_HV_off;// 20230913
+	  if (hv  != HV_state) {
 		  // button of high voltage changed
 		  HAL_GPIO_WritePin(EN_HV_GPIO_Port, EN_HV_Pin, hv);
 		  HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, hv);
 		  HV_state = hv;
 	  }
+//		if (I2C_HV_off)
+		
 
     /* USER CODE END WHILE */
 
@@ -628,6 +632,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			HAL_GPIO_WritePin(P1_LED1_GPIO_Port, P1_LED1_Pin,GPIO_PIN_SET);
 			HAL_GPIO_WritePin(P0_LED2_GPIO_Port, P0_LED2_Pin,GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(P1_LED2_GPIO_Port, P1_LED2_Pin,GPIO_PIN_RESET);}
+			
+			if((arrI2c_R[0][10]==0) & (arrI2c_R[1][10]== 0))
+			{I2C_HV_off = 0;}
+			else if ((arrI2c_R[0][10]==1) & (arrI2c_R[1][10]== 1))
+			{I2C_HV_off = 1;}
 	}
 	
 }
