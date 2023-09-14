@@ -276,6 +276,16 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 							arrI2c_T[masterN][8] = yBuffer[masterN][2];
 							arrI2c_T[masterN][9] = yBuffer[masterN][3];
 				
+							if (hv == 0)
+							{
+								arrI2c_T[masterN][6] = 1; //yBuffer[masterN][0];							
+							}
+							 else
+							{
+								arrI2c_T[masterN][6] = 0; //yBuffer[masterN][0];							
+							}	 
+								
+				
 					blockSetEEPROM = 1;
 				}
 				
@@ -588,7 +598,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 		// Перезапуск сторожевого таймера
 //		HAL_WWDG_Refresh(&hwwdg);	
-		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect<<1),arrI2c_R[lanSelect],10);//, 2000);
+		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect<<1),arrI2c_R[lanSelect],11);//, 2000);
 		}
 	}
 	if(htim->Instance == TIM6)
@@ -633,9 +643,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			HAL_GPIO_WritePin(P0_LED2_GPIO_Port, P0_LED2_Pin,GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(P1_LED2_GPIO_Port, P1_LED2_Pin,GPIO_PIN_RESET);}
 			
-			if((arrI2c_R[0][10]==0) & (arrI2c_R[1][10]== 0))
+			if(arrI2c_R[0][10]==0) // & (arrI2c_R[1][10]== 0))
 			{I2C_HV_off = 0;}
-			else if ((arrI2c_R[0][10]==1) & (arrI2c_R[1][10]== 1))
+			else if (arrI2c_R[0][10]==1) // & (arrI2c_R[1][10]== 1))
 			{I2C_HV_off = 1;}
 	}
 	
