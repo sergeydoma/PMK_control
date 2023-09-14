@@ -32,12 +32,12 @@ HAL_StatusTypeDef WTF; // test i2c
 volatile uint8_t arrI2c[10] = {0, 0, 0};
 uint8_t arrI2c_R[4][11];
 uint32_t addr;
-uint8_t arrI2c_T[4][10];
+uint8_t arrI2c_T[4][11];
 uint8_t block;
 uint8_t lanSelect;
 uint32_t lanCurrent = 0;
 _Bool blockSetEEPROM = 0;
-_Bool I2C_HV_off = 1; 
+uint8_t I2C_HV_off = 1; 
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -63,6 +63,8 @@ IWDG_HandleTypeDef hiwdg;
 
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
+
+uint8_t readyEon;
 
 /* USER CODE BEGIN PV */
 
@@ -283,6 +285,15 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 							 else
 							{
 								arrI2c_T[masterN][6] = 0; //yBuffer[masterN][0];							
+							}	 
+							
+							if (hv == 0)
+							{
+								arrI2c_T[masterN][10] = 1; //yBuffer[masterN][0];							
+							}
+							 else
+							{
+								arrI2c_T[masterN][10] = 0; //yBuffer[masterN][0];							
 							}	 
 								
 				
