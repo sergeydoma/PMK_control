@@ -204,6 +204,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 	  // process high voltage button
 	  hv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
 		hv = hv & !I2C_HV_off;// 20230913
+		
 	  if (hv  != HV_state) {
 		  // button of high voltage changed
 		  HAL_GPIO_WritePin(EN_HV_GPIO_Port, EN_HV_Pin, hv);
@@ -276,14 +277,14 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 							arrI2c_T[masterN][8] = yBuffer[masterN][2];
 							arrI2c_T[masterN][9] = yBuffer[masterN][3];
 				
-							if (hv == 0)
-							{
-								arrI2c_T[masterN][6] = 1; //yBuffer[masterN][0];							
-							}
-							 else
-							{
-								arrI2c_T[masterN][6] = 0; //yBuffer[masterN][0];							
-							}	 
+//							if (hv == 0)
+//							{
+//								arrI2c_T[masterN][6] = 1; //yBuffer[masterN][0];							
+//							}
+//							 else
+//							{
+//								arrI2c_T[masterN][6] = 0; //yBuffer[masterN][0];							
+//							}	 
 								
 				
 					blockSetEEPROM = 1;
@@ -620,15 +621,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				lanSelect = 4;
     		break;
     }
-		if (arrI2c_R[0][0]|arrI2c_R[1][0]|arrI2c_R[2][0]|arrI2c_R[3][0])
+		if (arrI2c_R[0][0] & arrI2c_R[1][0])		//|arrI2c_R[2][0]|arrI2c_R[3][0]) 230915 обе платы должны запросить снять 
 			{
-			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_SET);
+//			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_RESET);
+//			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_SET);
+				I2C_HV_off = 1;
 			}
 			else
 			{
-			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_RESET);
+//			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_SET);
+//			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_RESET);
+				I2C_HV_off = 0;
 			}	
 			
 			
@@ -643,10 +646,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			HAL_GPIO_WritePin(P0_LED2_GPIO_Port, P0_LED2_Pin,GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(P1_LED2_GPIO_Port, P1_LED2_Pin,GPIO_PIN_RESET);}
 			
-			if(arrI2c_R[0][10]==0) // & (arrI2c_R[1][10]== 0))
-			{I2C_HV_off = 0;}
-			else if (arrI2c_R[0][10]==1) // & (arrI2c_R[1][10]== 1))
-			{I2C_HV_off = 1;}
+//			if(arrI2c_R[0][10]==0) // & (arrI2c_R[1][10]== 0))
+//			{I2C_HV_off = 0;}
+//			else if (arrI2c_R[0][10]==1) // & (arrI2c_R[1][10]== 1))
+//			{I2C_HV_off = 1;}
+//			I2C_HV_off = 1;
 	}
 	
 }
