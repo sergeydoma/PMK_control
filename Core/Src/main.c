@@ -32,12 +32,14 @@ HAL_StatusTypeDef WTF; // test i2c
 volatile uint8_t arrI2c[10] = {0, 0, 0};
 uint8_t arrI2c_R[4][11];
 uint32_t addr;
-uint8_t arrI2c_T[4][10];
+uint8_t arrI2c_T[4][11];
 uint8_t block;
 uint8_t lanSelect;
 uint32_t lanCurrent = 0;
 _Bool blockSetEEPROM = 0;
-_Bool I2C_HV_off = 1; 
+_Bool I2C_HV_off = 1;
+uint8_t readyHV[4];
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -299,7 +301,8 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 				arrI2c_T[lanSelect][1]=xBuffer[0];
 				arrI2c_T[lanSelect][2]=xBuffer[1];
 				arrI2c_T[lanSelect][3]=xBuffer[2];
-				arrI2c_T[lanSelect][4]=xBuffer[3];				
+				arrI2c_T[lanSelect][4]=xBuffer[3];
+				arrI2c_T[lanSelect][10]= hv;// 230915
 				
 //				WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, 2, masterAddr,5);//, 2000);
 				for (int i=0; i<100; i++){}
@@ -593,7 +596,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		if(block==0)
 		{
-		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect<<1), arrI2c_T[lanSelect],10);//, 2000);
+		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect<<1), arrI2c_T[lanSelect],11);//, 2000);
 		}
 		else
 		{
@@ -621,17 +624,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				lanSelect = 4;
     		break;
     }
-		if ((arrI2c_R[0][0]& arrI2c_R[1][0])|
-				(arrI2c_R[0][0]& arrI2c_R[2][0])|
-				(arrI2c_R[0][0]& arrI2c_R[3][0])|
-				(arrI2c_R[1][0]& arrI2c_R[2][0])|
-				(arrI2c_R[1][0]& arrI2c_R[3][0])|
-				(arrI2c_R[2][0]&arrI2c_R[3][0])) // 230915 
+		
+		if ((arrI2c_R[0][0]) | arrI2c_R[1][0]|arrI2c_R[2][0]|arrI2c_R[3][0]) // 230915 
 			{
 //			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_RESET);
 //			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_SET);
-				I2C_HV_off = 1;
-			}
+				I2C_HV_off = 1;			}
 			else
 			{
 //			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_SET);
