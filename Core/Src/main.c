@@ -621,7 +621,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				lanSelect = 4;
     		break;
     }
-		if (arrI2c_R[0][0] & arrI2c_R[1][0])		//|arrI2c_R[2][0]|arrI2c_R[3][0]) 230915 обе платы должны запросить снять 
+		if (arrI2c_R[0][0])// | arrI2c_R[1][0]|arrI2c_R[2][0]|arrI2c_R[3][0]) // 230915 
 			{
 //			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_RESET);
 //			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_SET);
