@@ -18,7 +18,7 @@ void HEX_digit(int digit, uint16_t pin)
 				  0x66, 0x6D, 0x7D, 0x07,
 				  0x7F, 0x6F, 0x77, 0x7C,
 				  0x39, 0x5E, 0x79, 0x71
-		  };
+		  };                                                                                                                                                                                                                                                                          
 	uint8_t leds = LED7[digit & 15];
 
 	GPIOC->BRR = 0xff;
@@ -32,4 +32,21 @@ void HEX_digit(int digit, uint16_t pin)
 	}
 
 	HAL_GPIO_WritePin(GPIOC, pin, 0);
+}
+
+_Bool timeDel(uint16_t time)
+{
+ static uint16_t current = 0;
+	_Bool out;
+	if (current >= time)
+	{
+		out = 1;
+		current = 0;
+	}
+	else
+	{
+		current++;
+		out = 0;
+	}
+	return out;	
 }

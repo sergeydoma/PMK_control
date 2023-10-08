@@ -30,7 +30,7 @@
 HAL_StatusTypeDef RTF; // test i2c
 HAL_StatusTypeDef WTF; // test i2c	
 volatile uint8_t arrI2c[10] = {0, 0, 0};
-uint8_t arrI2c_R[4][11];
+uint8_t arrI2c_R[4][12];
 uint32_t addr;
 uint8_t arrI2c_T[4][11];
 uint8_t block;
@@ -38,8 +38,13 @@ uint8_t lanSelect;
 uint32_t lanCurrent = 0;
 _Bool blockSetEEPROM = 0;
 _Bool I2C_HV_off = 1;
+_Bool HV_on = 0;
 uint8_t readyHV[4];
-
+uint32_t delayHV;
+uint8_t modeHV =0;
+_Bool tempHv;
+int hv;
+int HV_state = -1;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -65,6 +70,7 @@ IWDG_HandleTypeDef hiwdg;
 
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
+TIM_HandleTypeDef htim14;
 
 /* USER CODE BEGIN PV */
 
@@ -78,6 +84,7 @@ static void MX_I2C2_Init(void);
 static void MX_TIM7_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_IWDG_Init(void);
+static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -116,7 +123,7 @@ void HAL_I2C_ErrorCallback()
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	int i, HV_state = -1;
+	int i; 
 	
   /* USER CODE END 1 */
 
@@ -143,9 +150,11 @@ int main(void)
   MX_TIM7_Init();
   MX_TIM6_Init();
   MX_IWDG_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
 HAL_TIM_Base_Start_IT(&htim7);
 HAL_TIM_Base_Start_IT(&htim6);
+HAL_TIM_Base_Start_IT(&htim14);
 //RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 0x02, masterAddr, 4);
 
 HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
@@ -197,7 +206,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
   while (1)
   {
 	addr = (~GPIOA->IDR & 0xff)+0x01;	//230724
-	  int hv;
+	  
 		
 	  // display current modbus address
 	  HEX_digit(addr & 15, DIG0_Pin);
@@ -205,14 +214,16 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 
 	  // process high voltage button
 	  hv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
-		hv = hv & !I2C_HV_off;// 20230913
-		
-	  if (hv  != HV_state) {
+		tempHv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
+		hv = hv & HV_on; //!I2C_HV_off;// 20230913
+//		hv = !HV_on;
+	  if (hv  != HV_state) 
+			{
 		  // button of high voltage changed
-		  HAL_GPIO_WritePin(EN_HV_GPIO_Port, EN_HV_Pin, hv);
-		  HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, hv);
+		  HAL_GPIO_WritePin(EN_HV_GPIO_Port, EN_HV_Pin, hv);//hv);
+		  HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, hv);//);
 		  HV_state = hv;
-	  }
+			}
 //		if (I2C_HV_off)
 		
 
@@ -302,7 +313,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 				arrI2c_T[lanSelect][2]=xBuffer[1];
 				arrI2c_T[lanSelect][3]=xBuffer[2];
 				arrI2c_T[lanSelect][4]=xBuffer[3];
-				arrI2c_T[lanSelect][10]= hv;// 230915
+				arrI2c_T[lanSelect][10]= modeHV; // hv;// 230915
 				
 //				WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, 2, masterAddr,5);//, 2000);
 				for (int i=0; i<100; i++){}
@@ -507,6 +518,37 @@ static void MX_TIM7_Init(void)
 }
 
 /**
+  * @brief TIM14 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM14_Init(void)
+{
+
+  /* USER CODE BEGIN TIM14_Init 0 */
+
+  /* USER CODE END TIM14_Init 0 */
+
+  /* USER CODE BEGIN TIM14_Init 1 */
+
+  /* USER CODE END TIM14_Init 1 */
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 7999;
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 1000;
+  htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM14_Init 2 */
+
+  /* USER CODE END TIM14_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -594,48 +636,52 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM7)
 	{
+		
+		
 		if(block==0)
 		{
-		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect<<1), arrI2c_T[lanSelect],11);//, 2000);
+		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],11);//, 2000);
 		}
 		else
 		{
 		// Перезапуск сторожевого таймера
 //		HAL_WWDG_Refresh(&hwwdg);	
-		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect<<1),arrI2c_R[lanSelect],11);//, 2000);
+		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect+1),arrI2c_R[0],11);//, 2000); 
 		}
 	}
 	if(htim->Instance == TIM6)
 	{
 		if(lanCurrent > _timeLanC)
 		{lanCurrent = 0;}
+		else 
+		{lanCurrent++;}
 		switch (lanCurrent)
     {
-    	case 0:
-				lanSelect = 1;
+    	case 00:
+				lanSelect = 0;
     		break;
     	case 10:
-				lanSelect = 2;
+				lanSelect = 1;
     		break;
-			case 20:
-				lanSelect = 3;
-    		break;
-    	case 30:
-				lanSelect = 4;
-    		break;
+//			case 200:
+//				lanSelect = 3;
+//    		break;
+//    	case 300:
+//				lanSelect = 4;
+//    		break;
     }
 		
-		if ((arrI2c_R[0][0]) | arrI2c_R[1][0]|arrI2c_R[2][0]|arrI2c_R[3][0]) // 230915 
-			{
+//		if ((arrI2c_R[0][0]) | arrI2c_R[1][0]|arrI2c_R[2][0]|arrI2c_R[3][0]) // 230915 
+//			{
 //			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_RESET);
-//			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_SET);
-				I2C_HV_off = 1;			}
-			else
-			{
+////			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_SET);
+//				I2C_HV_off = 1;			}
+//			else
+//			{
 //			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_SET);
-//			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_RESET);
-				I2C_HV_off = 0;
-			}	
+////			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_RESET);
+//				I2C_HV_off = 0;
+//			}	
 			
 			
 			if (arrI2c_R[0][1]|arrI2c_R[1][1]|arrI2c_R[2][1]|arrI2c_R[3][1])
@@ -655,7 +701,65 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //			{I2C_HV_off = 1;}
 //			I2C_HV_off = 1;
 	}
-	
+	if(htim->Instance == TIM14)
+	{
+		if (modeHV ==0)
+		{		
+				HV_on =0;
+				if (timeDel(15))
+//				if (delayHV > 15)
+				{
+//				delayHV = 0;
+				modeHV =1;
+				}
+//				else
+//				{
+//					delayHV ++;
+//				}
+		}
+		else if (modeHV ==1)
+		{
+			HV_on =0;
+//			if(delayHV > 150)
+			if(timeDel(150))
+			{
+//				delayHV = 0;
+				modeHV =2;
+			
+			}
+//			else
+//			{delayHV ++;}
+		
+		}
+		
+		else if (modeHV ==2)
+		{
+			HV_on = 1;
+//			if(delayHV > 15)	
+				if (timeDel(15))
+			{
+//				delayHV = 1;
+				modeHV =3;			
+			}
+//			else
+//			{delayHV ++;}		
+		}
+		else if (modeHV ==3)
+		{
+			HV_on =1;
+//			if(delayHV > 150)
+				if (timeDel(150))
+			{
+//				delayHV = 0;
+				modeHV =0;
+			
+			}
+//			else
+//			{delayHV ++;}
+		
+		}
+	}
+		
 }
 /* USER CODE END 4 */
 

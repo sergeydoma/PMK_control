@@ -47,7 +47,7 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 #ifndef _timeLanC
-#define _timeLanC		40		// цикл опроса по i2c 4  платы
+#define _timeLanC		20		// цикл опроса по i2c 4  платы
 #endif
 /* USER CODE END EM */
 
@@ -119,6 +119,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 void us_delay(uint16_t d);
 void HEX_digit(int digit, uint16_t pin);
+_Bool timeDel(uint16_t time);
 
 /* USER CODE END Private defines */
 
