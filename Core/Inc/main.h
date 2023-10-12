@@ -49,6 +49,14 @@ extern "C" {
 #ifndef _timeLanC
 #define _timeLanC		20		// цикл опроса по i2c 4  платы
 #endif
+
+#ifndef _timePause
+#define _timePause		20 // задержка на установку режима после подачи/снятия напряжения смещения
+#endif
+
+#ifndef _timeMeasure
+#define _timeMeasure		150 // задержка на установку режима после подачи/снятия напряжения смещения
+#endif
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -71,8 +79,8 @@ void Error_Handler(void);
 #define SEG2_GPIO_Port GPIOC
 #define SEG3_Pin GPIO_PIN_3
 #define SEG3_GPIO_Port GPIOC
-#define A0_Pin GPIO_PIN_0
-#define A0_GPIO_Port GPIOA
+#define Bipolar_Pin GPIO_PIN_0
+#define Bipolar_GPIO_Port GPIOA
 #define A1_Pin GPIO_PIN_1
 #define A1_GPIO_Port GPIOA
 #define A2_Pin GPIO_PIN_2

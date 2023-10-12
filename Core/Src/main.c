@@ -45,6 +45,8 @@ uint8_t modeHV =0;
 _Bool tempHv;
 int hv;
 int HV_state = -1;
+uint32_t delayHV = 0;
+_Bool test_Bipolar;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -202,10 +204,25 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
   /* USER CODE BEGIN WHILE */
 	HAL_I2C_Mem_Read(&hi2c2, (uint16_t) I2C1_DEVICE_ADDRESS<<1, MEMORY_ADDRESS, 1, xBuffer, 4, 5); //read memory address 08
 //	RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 2, masterAddr, 3);
+//if ((HAL_GPIO_ReadPin(A2_GPIO_Port, A2_Pin)==0))
+//{HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 0);}
+//else
+//{{HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 0);}
+  
 
-  while (1)
+while (1)
   {
-	addr = (~GPIOA->IDR & 0xff)+0x01;	//230724
+		test_Bipolar=(HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0);
+		if (test_Bipolar==0)
+		{
+		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 0);
+		}
+		else
+		{
+		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 1);
+		}
+		
+	addr = ((~GPIOA->IDR & 0xff)&0xFC)+0x01;	//230724
 	  
 		
 	  // display current modbus address
@@ -584,6 +601,9 @@ static void MX_GPIO_Init(void)
                           |SEG6_Pin|SEG7_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, EN_HV_Pin|P0_LED1_Pin|P0_LED2_Pin|P1_LED1_Pin
                           |P1_LED2_Pin|MDI_G_Pin|MDI_Y_Pin, GPIO_PIN_RESET);
 
@@ -606,10 +626,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : A0_Pin A1_Pin A2_Pin A3_Pin
-                           A4_Pin A5_Pin A6_Pin A7_Pin */
-  GPIO_InitStruct.Pin = A0_Pin|A1_Pin|A2_Pin|A3_Pin
-                          |A4_Pin|A5_Pin|A6_Pin|A7_Pin;
+  /*Configure GPIO pin : Bipolar_Pin */
+  GPIO_InitStruct.Pin = Bipolar_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Bipolar_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : A1_Pin A2_Pin A3_Pin A4_Pin
+                           A5_Pin A6_Pin A7_Pin */
+  GPIO_InitStruct.Pin = A1_Pin|A2_Pin|A3_Pin|A4_Pin
+                          |A5_Pin|A6_Pin|A7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -646,7 +673,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 		// Перезапуск сторожевого таймера
 //		HAL_WWDG_Refresh(&hwwdg);	
-		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect+1),arrI2c_R[0],11);//, 2000); 
+		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect+1),arrI2c_R[lanSelect],11);//, 2000); 
 		}
 	}
 	if(htim->Instance == TIM6)
@@ -705,59 +732,49 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		if (modeHV ==0)
 		{		
-				HV_on =0;
-				if (timeDel(15))
-//				if (delayHV > 15)
+				if(delayHV >=5)
+				{HV_on =0;}
+				else
+				{delayHV++;}
+				
+//				HV_on =0;
+				if (timeDel(_timePause)) // пауза
 				{
-//				delayHV = 0;
 				modeHV =1;
+				delayHV=0;
 				}
-//				else
-//				{
-//					delayHV ++;
-//				}
 		}
 		else if (modeHV ==1)
 		{
 			HV_on =0;
-//			if(delayHV > 150)
-			if(timeDel(150))
+			if(timeDel(_timeMeasure)) //измерение напряжения
 			{
-//				delayHV = 0;
-				modeHV =2;
-			
-			}
-//			else
-//			{delayHV ++;}
-		
-		}
-		
+				modeHV =2;			
+			}		
+		}		
 		else if (modeHV ==2)
 		{
-			HV_on = 1;
-//			if(delayHV > 15)	
-				if (timeDel(15))
+			if(delayHV >=5)
+				{HV_on =1;}
+				else
+				{delayHV++;}
+				
+				if (timeDel(_timePause)) // пауза
 			{
-//				delayHV = 1;
-				modeHV =3;			
-			}
-//			else
-//			{delayHV ++;}		
+				modeHV =3;
+				delayHV = 0;
+			}		
 		}
 		else if (modeHV ==3)
 		{
 			HV_on =1;
-//			if(delayHV > 150)
-				if (timeDel(150))
+				if (timeDel(_timeMeasure)) // измерение сопротивления
 			{
-//				delayHV = 0;
-				modeHV =0;
-			
-			}
-//			else
-//			{delayHV ++;}
-		
+				modeHV =0;			
+			}		
 		}
+		HV_on =1;
+		modeHV =3;
 	}
 		
 }
