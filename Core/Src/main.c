@@ -38,7 +38,7 @@ uint8_t lanSelect;
 uint32_t lanCurrent = 0;
 _Bool blockSetEEPROM = 0;
 _Bool I2C_HV_off = 1;
-_Bool HV_on = 0;
+//_Bool HV_on = 0;
 uint8_t readyHV[4];
 uint32_t delayHV;
 uint8_t modeHV =0;
@@ -46,12 +46,12 @@ _Bool tempHv;
 int hv;
 int HV_state = -1;
 uint32_t delayHV = 0;
-_Bool test_Bipolar;
-_Bool bipolar;
+//_Bool test_Bipolar;
+//_Bool bipolar;
 uint32_t led_hv_dinamic = 0;
 uint8_t hvAllarm = 0;
 //			_Bool hvLoad =0;
-uint16_t hvLoadCurrent=0;
+//uint16_t hvLoadCurrent=0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -228,7 +228,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 while (1)
   {
 
-		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, bipolar);
+//		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, bipolar);
 	
 	addr = ((~GPIOA->IDR & 0xff)&0xFC)+0x01;	//230724
 		
