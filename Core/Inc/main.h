@@ -59,7 +59,7 @@ extern "C" {
 #endif
 
 #ifndef _timeMeasure
-#define _timeMeasure				90 //80 //120 // задержка на измерение сопротивления
+#define _timeMeasure				120 //80 //120 // задержка на измерение сопротивления
 #endif
 
 #ifndef _timeMeasureVolt

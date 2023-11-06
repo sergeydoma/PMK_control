@@ -775,32 +775,32 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		switch (modeHV)
     {
     	case 0:
-				HV_on =0;
-				bipolar = 0;
+				hvOut =0;
+				hvPool = 0;
 				if (timeDel(_timePause))
 				{
 					modeHV = 1;					
 				}
     		break;
     	case 1:
-				HV_on =0;
-				bipolar = 0;
+				hvOut =0;
+				hvPool = 0;
 				if (timeDel(_timeMeasureVolt))
 				{
 					modeHV = 2;					
 				}
     		break;
 			case 2:
-				HV_on =0;
-				bipolar = 0;
+				hvOut =0;
+				hvPool = 0;
 				if (timeDel(_timeDeley))
 				{
 					modeHV = 3;					
 				}
 				break;
 			case 3:
-				HV_on =1;
-				bipolar = 0;
+				hvOut =1;
+				hvPool = 0;
 
 				if (timeDel(_timePause))
 				{
@@ -808,19 +808,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				}
 				break;
 			case 4:
-				HV_on =1;
-				bipolar = 0;
-			
+				hvOut =1;
+				hvPool = 0;			
 				if(timeDel(_timeMeasure))
 				{
-					hvLoadCurrent=0;
 					modeHV = 5;
 				}
 				break;
 				
 			case 5:
-				HV_on =1;
-				bipolar = 0;
+				hvOut =1;
+				hvPool = 0;
 
 				if(timeDel(_timeDeley))
 				{
@@ -828,16 +826,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				}
 				break;
 			case 6:						// пауза для снятия - перед подачей +
-				HV_on =0;
-				bipolar = 0;
-				if(timeDel(_timePause))
+				hvOut =0;
+				hvPool = 1;
+				if(timeDel(_timeDeley))
 				{
 					modeHV = 7;
 				}
 				break;
     	case 7:
-				HV_on =1;
-				bipolar = 1;
+				hvOut =1;
+				hvPool = 1;
 
 				if (timeDel(_timePause))
 				{
@@ -845,25 +843,33 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				}
     		break;
     	case 8:
-				HV_on =1;
-				bipolar = 1;
-
+				hvOut =1;
+				hvPool = 1;
+			
 				if (timeDel(_timeMeasure))
 				{
-					hvLoadCurrent=0;
 					modeHV = 9;
 				}
     		break;
 			case 9:
-				HV_on =1;
-				bipolar = 1;
-
+				hvOut =1;
+				hvPool = 1;
+				if (timeDel(_timeDeley))
+				{
+					modeHV = 10;
+				}
+				break;
+			case 10:											// пауза для снятия + перед подачей -
+				hvOut = 0;
+				hvPool = 1;
 				if (timeDel(_timeDeley))
 				{
 					modeHV = 0;
 				}
+				break;
 			
-				break;				
+			
+								
     	default:
 				modeHV = 0;
     		break;
