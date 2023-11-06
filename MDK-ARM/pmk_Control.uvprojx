@@ -627,6 +627,11 @@
               <FileType>5</FileType>
               <FilePath>..\Core\Inc\main.h</FilePath>
             </File>
+            <File>
+              <FileName>referens.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\referens.txt</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

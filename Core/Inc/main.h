@@ -50,12 +50,20 @@ extern "C" {
 #define _timeLanC		20		// цикл опроса по i2c 4  платы
 #endif
 
+#ifndef _timeDelay
+#define _timeDeley			10 // Задержка для завершения операции вычисления сопротивления
+#endif
+
 #ifndef _timePause
 #define _timePause		20 // задержка на установку режима после подачи/снятия напряжения смещения
 #endif
 
 #ifndef _timeMeasure
-#define _timeMeasure		150 // задержка на установку режима после подачи/снятия напряжения смещения
+#define _timeMeasure				90 //80 //120 // задержка на измерение сопротивления
+#endif
+
+#ifndef _timeMeasureVolt
+#define _timeMeasureVolt		70 // задержка на измерение напряжения
 #endif
 /* USER CODE END EM */
 
@@ -107,6 +115,10 @@ void Error_Handler(void);
 #define SEG7_GPIO_Port GPIOC
 #define SW_HV_Pin GPIO_PIN_8
 #define SW_HV_GPIO_Port GPIOC
+#define HV_POL_Pin GPIO_PIN_8
+#define HV_POL_GPIO_Port GPIOA
+#define HV_OUT_Pin GPIO_PIN_9
+#define HV_OUT_GPIO_Port GPIOA
 #define LED_HV_GRN_Pin GPIO_PIN_10
 #define LED_HV_GRN_GPIO_Port GPIOC
 #define LED_HV_RED_Pin GPIO_PIN_11

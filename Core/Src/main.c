@@ -32,7 +32,7 @@ HAL_StatusTypeDef WTF; // test i2c
 volatile uint8_t arrI2c[10] = {0, 0, 0};
 uint8_t arrI2c_R[4][12];
 uint32_t addr;
-uint8_t arrI2c_T[4][11];
+uint8_t arrI2c_T[4][12];
 uint8_t block;
 uint8_t lanSelect;
 uint32_t lanCurrent = 0;
@@ -47,6 +47,11 @@ int hv;
 int HV_state = -1;
 uint32_t delayHV = 0;
 _Bool test_Bipolar;
+_Bool bipolar;
+uint32_t led_hv_dinamic = 0;
+uint8_t hvAllarm = 0;
+_Bool hvLoad =0;
+uint16_t hvLoadCurrent=0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -73,6 +78,7 @@ IWDG_HandleTypeDef hiwdg;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim14;
+TIM_HandleTypeDef htim16;
 
 /* USER CODE BEGIN PV */
 
@@ -87,6 +93,7 @@ static void MX_TIM7_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_IWDG_Init(void);
 static void MX_TIM14_Init(void);
+static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -153,10 +160,12 @@ int main(void)
   MX_TIM6_Init();
   MX_IWDG_Init();
   MX_TIM14_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
 HAL_TIM_Base_Start_IT(&htim7);
 HAL_TIM_Base_Start_IT(&htim6);
 HAL_TIM_Base_Start_IT(&htim14);
+//HAL_TIM_Base_Start_IT(&htim16);
 //RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 0x02, masterAddr, 4);
 
 HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
@@ -202,6 +211,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	HAL_TIM_Base_Start_IT(&htim16);
 	HAL_I2C_Mem_Read(&hi2c2, (uint16_t) I2C1_DEVICE_ADDRESS<<1, MEMORY_ADDRESS, 1, xBuffer, 4, 5); //read memory address 08
 //	RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 2, masterAddr, 3);
 //if ((HAL_GPIO_ReadPin(A2_GPIO_Port, A2_Pin)==0))
@@ -212,18 +222,22 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 
 while (1)
   {
-		test_Bipolar=(HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0);
-		if (test_Bipolar==0)
-		{
-		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 0);
-		}
-		else
-		{
-		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 1);
-		}
-		
+//		test_Bipolar=(HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0);
+//		if (test_Bipolar==0)
+//		{
+//		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 0);
+//		}
+//		else
+//		{
+		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, bipolar);
+//		}
+//	_Bool tempHv;	
 	addr = ((~GPIOA->IDR & 0xff)&0xFC)+0x01;	//230724
-	  
+//	tempHv = HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0; // 1 если аварии нет
+//		if (tempHv)
+//		{hvLoad = 0;}//Нужно наоборот
+//		else
+//		{hvLoad = 1;}
 		
 	  // display current modbus address
 	  HEX_digit(addr & 15, DIG0_Pin);
@@ -231,14 +245,24 @@ while (1)
 
 	  // process high voltage button
 	  hv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
-		tempHv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
+//		tempHv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
 		hv = hv & HV_on; //!I2C_HV_off;// 20230913
 //		hv = !HV_on;
 	  if (hv  != HV_state) 
 			{
 		  // button of high voltage changed
 		  HAL_GPIO_WritePin(EN_HV_GPIO_Port, EN_HV_Pin, hv);//hv);
-		  HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, hv);//);
+//				if (hv)
+//				{
+//					HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);//);
+//					HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, 0);
+//				}	
+//				else
+//					{
+//					HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);//);
+//					HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, 1);
+//				}	
+					
 		  HV_state = hv;
 			}
 //		if (I2C_HV_off)
@@ -331,6 +355,7 @@ while (1)
 				arrI2c_T[lanSelect][3]=xBuffer[2];
 				arrI2c_T[lanSelect][4]=xBuffer[3];
 				arrI2c_T[lanSelect][10]= modeHV; // hv;// 230915
+				arrI2c_T[lanSelect][11]= hvAllarm;
 				
 //				WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, 2, masterAddr,5);//, 2000);
 				for (int i=0; i<100; i++){}
@@ -566,6 +591,38 @@ static void MX_TIM14_Init(void)
 }
 
 /**
+  * @brief TIM16 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM16_Init(void)
+{
+
+  /* USER CODE BEGIN TIM16_Init 0 */
+
+  /* USER CODE END TIM16_Init 0 */
+
+  /* USER CODE BEGIN TIM16_Init 1 */
+
+  /* USER CODE END TIM16_Init 1 */
+  htim16.Instance = TIM16;
+  htim16.Init.Prescaler = 799;
+  htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim16.Init.Period = 10;
+  htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim16.Init.RepetitionCounter = 0;
+  htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM16_Init 2 */
+
+  /* USER CODE END TIM16_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -601,7 +658,7 @@ static void MX_GPIO_Init(void)
                           |SEG6_Pin|SEG7_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Bipolar_Pin|HV_POL_Pin|HV_OUT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, EN_HV_Pin|P0_LED1_Pin|P0_LED2_Pin|P1_LED1_Pin
@@ -626,12 +683,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Bipolar_Pin */
-  GPIO_InitStruct.Pin = Bipolar_Pin;
+  /*Configure GPIO pins : Bipolar_Pin HV_POL_Pin HV_OUT_Pin */
+  GPIO_InitStruct.Pin = Bipolar_Pin|HV_POL_Pin|HV_OUT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Bipolar_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : A1_Pin A2_Pin A3_Pin A4_Pin
                            A5_Pin A6_Pin A7_Pin */
@@ -667,7 +724,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		
 		if(block==0)
 		{
-		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],11);//, 2000);
+		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],12);//, 2000);
 		}
 		else
 		{
@@ -722,59 +779,173 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			HAL_GPIO_WritePin(P0_LED2_GPIO_Port, P0_LED2_Pin,GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(P1_LED2_GPIO_Port, P1_LED2_Pin,GPIO_PIN_RESET);}
 			
-//			if(arrI2c_R[0][10]==0) // & (arrI2c_R[1][10]== 0))
-//			{I2C_HV_off = 0;}
-//			else if (arrI2c_R[0][10]==1) // & (arrI2c_R[1][10]== 1))
-//			{I2C_HV_off = 1;}
-//			I2C_HV_off = 1;
+
 	}
 	if(htim->Instance == TIM14)
 	{
-		if (modeHV ==0)
-		{		
-				if(delayHV >=5)
-				{HV_on =0;}
-				else
-				{delayHV++;}
-				
-//				HV_on =0;
-				if (timeDel(_timePause)) // пауза
+		tempHv = HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0; // 1 если аварии нет
+		if (tempHv)
+		{hvLoad = 0;}//Нужно наоборот
+		else if ((modeHV==4) | (modeHV==8))
+		{hvLoad = 1;}
+		
+		switch (modeHV)
+    {
+    	case 0:
+				HV_on =0;
+				bipolar = 0;
+				if (timeDel(_timePause))
 				{
-				modeHV =1;
-				delayHV=0;
+					modeHV = 1;					
 				}
-		}
-		else if (modeHV ==1)
-		{
-			HV_on =0;
-			if(timeDel(_timeMeasure)) //измерение напряжения
+    		break;
+    	case 1:
+				HV_on =0;
+				bipolar = 0;
+				if (timeDel(_timeMeasureVolt))
+				{
+					modeHV = 2;					
+				}
+    		break;
+			case 2:
+				HV_on =0;
+				bipolar = 0;
+				if (timeDel(_timeDeley))
+				{
+					modeHV = 3;					
+				}
+				break;
+			case 3:
+				HV_on =1;
+				bipolar = 0;
+
+				if (timeDel(_timePause))
+				{
+					modeHV =4;					
+				}
+				break;
+			case 4:
+				HV_on =1;
+				bipolar = 0;
+			if (hvLoad)
 			{
-				modeHV =2;			
-			}		
-		}		
-		else if (modeHV ==2)
-		{
-			if(delayHV >=5)
-				{HV_on =1;}
+				if(hvLoadCurrent >= 10)
+				{
+					hvAllarm =1;
+				}
 				else
-				{delayHV++;}
+				{					
+					hvLoadCurrent++;
+				}			
+			}
+			else
+			{
+				hvAllarm =0;
+				hvLoadCurrent=0;
+			}
+
+				if(timeDel(_timeMeasure))
+				{
+					hvLoadCurrent=0;
+					modeHV = 5;
+				}
+				break;
 				
-				if (timeDel(_timePause)) // пауза
+			case 5:
+				HV_on =1;
+				bipolar = 0;
+
+				if(timeDel(_timeDeley))
+				{
+					modeHV = 6;
+				}
+				break;
+			case 6:						// пауза для снятия - перед подачей +
+				HV_on =0;
+				bipolar = 0;
+				if(timeDel(_timePause))
+				{
+					modeHV = 7;
+				}
+				break;
+    	case 7:
+				HV_on =1;
+				bipolar = 1;
+
+				if (timeDel(_timePause))
+				{
+					modeHV = 8;
+				}
+    		break;
+    	case 8:
+				HV_on =1;
+				bipolar = 1;
+				if (hvLoad)
 			{
-				modeHV =3;
-				delayHV = 0;
-			}		
-		}
-		else if (modeHV ==3)
-		{
-			HV_on =1;
-				if (timeDel(_timeMeasure)) // измерение сопротивления
+				if(hvLoadCurrent >= 10)
+				{
+					hvAllarm =1;
+				}
+				else
+				{					
+					hvLoadCurrent++;
+				}			
+			}
+			else
 			{
-				modeHV =0;			
-			}		
-		}
-		HV_on =1;
-		modeHV =3;
+				hvAllarm =0;
+				hvLoadCurrent=0;
+			}
+
+				if (timeDel(_timeMeasure))
+				{
+					hvLoadCurrent=0;
+					modeHV = 9;
+				}
+    		break;
+			case 9:
+				HV_on =1;
+				bipolar = 1;
+
+				if (timeDel(_timeDeley))
+				{
+					modeHV = 0;
+				}
+			
+				break;				
+    	default:
+				modeHV = 0;
+    		break;
+    }
+			
+
+	}
+	if(htim->Instance == TIM16)
+	{	
+		
+
+			
+		if (hvAllarm)
+			{
+				HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin,1);
+				HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 0);//);
+			}
+		else if (hv)
+			{
+				HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);//);
+				HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, 0);
+			}	
+		else
+			{
+			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);//);
+			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, 1);
+			}	
+		if((led_hv_dinamic>0)&(led_hv_dinamic<11)& (hvAllarm == 0))
+			{HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, 0);}
+		else if(led_hv_dinamic>=14)
+			{led_hv_dinamic =0;}
+			led_hv_dinamic++;
+		
 	}
 		
 }
