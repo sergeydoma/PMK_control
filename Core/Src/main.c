@@ -50,7 +50,7 @@ _Bool test_Bipolar;
 _Bool bipolar;
 uint32_t led_hv_dinamic = 0;
 uint8_t hvAllarm = 0;
-_Bool hvLoad =0;
+//			_Bool hvLoad =0;
 uint16_t hvLoadCurrent=0;
 /* USER CODE END PTD */
 
@@ -222,22 +222,10 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 
 while (1)
   {
-//		test_Bipolar=(HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0);
-//		if (test_Bipolar==0)
-//		{
-//		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 0);
-//		}
-//		else
-//		{
+
 		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, bipolar);
-//		}
-//	_Bool tempHv;	
+	
 	addr = ((~GPIOA->IDR & 0xff)&0xFC)+0x01;	//230724
-//	tempHv = HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0; // 1 если аварии нет
-//		if (tempHv)
-//		{hvLoad = 0;}//Нужно наоборот
-//		else
-//		{hvLoad = 1;}
 		
 	  // display current modbus address
 	  HEX_digit(addr & 15, DIG0_Pin);
@@ -245,47 +233,22 @@ while (1)
 
 	  // process high voltage button
 	  hv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
-//		tempHv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
-		hv = hv & HV_on; //!I2C_HV_off;// 20230913
-//		hv = !HV_on;
+
+//		hv = hv & HV_on; //!I2C_HV_off;// 20230913
+
 	  if (hv  != HV_state) 
 			{
 		  // button of high voltage changed
-		  HAL_GPIO_WritePin(EN_HV_GPIO_Port, EN_HV_Pin, hv);//hv);
-//				if (hv)
-//				{
-//					HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);//);
-//					HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, 0);
-//				}	
-//				else
-//					{
-//					HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);//);
-//					HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, 1);
-//				}	
+		  HAL_GPIO_WritePin(EN_HV_GPIO_Port, EN_HV_Pin, hv);//hv);	
 					
 		  HV_state = hv;
 			}
-//		if (I2C_HV_off)
 		
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//		masterAddr[0] = addr;
-		
-//		if (HAL_I2C_IsDeviceReady(&hi2c2, (1<<1), 1,2000)!= HAL_OK)
-//		{
-		
-		
 
-			
-//		}
-//		HAL_Delay(5);
-		  
-//      WTF = HAL_I2C_Master_Receive(&hi2c2, 2, arrRes,3, 2000);
-//			for (int i=0; i<100; i++){}
-//		HAL_Delay(5);
-//		HAL_Delay(100);
 	//****function transmit Memory	
 	//*************************** Блок записи номера шасси начало ***************************** //
 				uint8_t masterN = 0xFF;
@@ -755,17 +718,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //    		break;
     }
 		
-//		if ((arrI2c_R[0][0]) | arrI2c_R[1][0]|arrI2c_R[2][0]|arrI2c_R[3][0]) // 230915 
-//			{
-//			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_RESET);
+		if ((arrI2c_R[0][0]) | arrI2c_R[1][0]|arrI2c_R[2][0]|arrI2c_R[3][0]) // 230915 
+			{
+				hvAllarm = 1;
+////			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_RESET);
 ////			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_SET);
-//				I2C_HV_off = 1;			}
-//			else
-//			{
-//			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_SET);
+//////				I2C_HV_off = 1;			
+			}
+			else
+			{
+				hvAllarm =0;
+////			HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, GPIO_PIN_SET);
 ////			HAL_GPIO_WritePin(LED_HV_RED_GPIO_Port, LED_HV_RED_Pin, GPIO_PIN_RESET);
-//				I2C_HV_off = 0;
-//			}	
+//////				I2C_HV_off = 0;
+			}	
 			
 			
 			if (arrI2c_R[0][1]|arrI2c_R[1][1]|arrI2c_R[2][1]|arrI2c_R[3][1])
@@ -783,11 +749,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 	if(htim->Instance == TIM14)
 	{
-		tempHv = HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0; // 1 если аварии нет
-		if (tempHv)
-		{hvLoad = 0;}//Нужно наоборот
-		else if ((modeHV==4) | (modeHV==8))
-		{hvLoad = 1;}
+//		tempHv = HAL_GPIO_ReadPin(A1_GPIO_Port, A1_Pin)==0; // 1 если аварии нет
+//		if (tempHv)
+//		{hvLoad = 0;}//Нужно наоборот
+//		else if ((modeHV==4) | (modeHV==8))
+//		{hvLoad = 1;}
 		
 		switch (modeHV)
     {
@@ -827,23 +793,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			case 4:
 				HV_on =1;
 				bipolar = 0;
-			if (hvLoad)
-			{
-				if(hvLoadCurrent >= 10)
-				{
-					hvAllarm =1;
-				}
-				else
-				{					
-					hvLoadCurrent++;
-				}			
-			}
-			else
-			{
-				hvAllarm =0;
-				hvLoadCurrent=0;
-			}
-
+			
 				if(timeDel(_timeMeasure))
 				{
 					hvLoadCurrent=0;
@@ -880,22 +830,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     	case 8:
 				HV_on =1;
 				bipolar = 1;
-				if (hvLoad)
-			{
-				if(hvLoadCurrent >= 10)
-				{
-					hvAllarm =1;
-				}
-				else
-				{					
-					hvLoadCurrent++;
-				}			
-			}
-			else
-			{
-				hvAllarm =0;
-				hvLoadCurrent=0;
-			}
 
 				if (timeDel(_timeMeasure))
 				{
