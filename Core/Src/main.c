@@ -64,6 +64,11 @@ uint8_t xBuffer[4]; // сканирование плат
 uint8_t yBuffer[4][10]; // запись ID устройства
 uint8_t zBuffer[4][10];
 uint32_t pBuffer;
+int hvPool = 0; // при 0 на выход идет -100 В
+int poolState = -1;
+int hvOut =0; 	// 	при 0 выход закорочен на землю
+int outState = -1;
+
 #define I2C1_DEVICE_ADDRESS      0x50   /* A0 = A1 = A2 = 0 */
 #define MEMORY_ADDRESS      			0x08 
 /* USER CODE END PM */
@@ -243,6 +248,18 @@ while (1)
 					
 		  HV_state = hv;
 			}
+			
+		if (hvPool != poolState)
+		{
+			HAL_GPIO_WritePin(HV_POL_GPIO_Port, HV_POL_Pin, hvPool);
+			poolState = hvPool;		
+		}
+		
+		if (hvOut != outState)
+		{
+			HAL_GPIO_WritePin(HV_OUT_GPIO_Port, HV_OUT_Pin, hvOut);
+			outState = hvOut;		
+		}
 		
 
     /* USER CODE END WHILE */
@@ -318,7 +335,7 @@ while (1)
 				arrI2c_T[lanSelect][3]=xBuffer[2];
 				arrI2c_T[lanSelect][4]=xBuffer[3];
 				arrI2c_T[lanSelect][10]= modeHV; // hv;// 230915
-				arrI2c_T[lanSelect][11]= hvAllarm;
+//				arrI2c_T[lanSelect][11]= hvAllarm;
 				
 //				WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, 2, masterAddr,5);//, 2000);
 				for (int i=0; i<100; i++){}
