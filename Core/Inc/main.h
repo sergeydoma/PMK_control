@@ -140,7 +140,7 @@ void Error_Handler(void);
 void us_delay(uint16_t d);
 void HEX_digit(int digit, uint16_t pin);
 _Bool timeDel(uint16_t time);
-
+void HEX_alarm(int digit, uint16_t pin);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

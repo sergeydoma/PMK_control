@@ -68,6 +68,8 @@ int hvPool = 0; // при 0 на выход идет -100 В
 int poolState = -1;
 int hvOut =0; 	// 	при 0 выход закорочен на землю
 int outState = -1;
+uint16_t indicator_alarm = 0;
+uint16_t alarm[4]= {0, 0, 0, 0};
 
 #define I2C1_DEVICE_ADDRESS      0x50   /* A0 = A1 = A2 = 0 */
 #define MEMORY_ADDRESS      			0x08 
@@ -233,9 +235,42 @@ while (1)
 	addr = ((~GPIOA->IDR & 0xff)&0xFC)+0x01;	//230724
 		
 	  // display current modbus address
-//	  HEX_digit(addr & 15, DIG0_Pin);
-//	  HEX_digit(addr >> 4, DIG1_Pin);
-
+	  if ((alarm[0] != 0) & (alarm[1] == 0) & (alarm[2] == 0) &(alarm[3] == 0))
+		{
+		indicator_alarm = alarm[0];
+		}
+		else if ((alarm[0] == 0) & (alarm[1] != 0) & (alarm[2] == 0) &(alarm[3] == 0))
+		{
+		indicator_alarm = alarm[1];
+		}
+		else if ((alarm[0] == 0) & (alarm[1] == 0) & (alarm[2] != 0) &(alarm[3] == 0))
+		{
+		indicator_alarm = alarm[2];
+		}
+		else if ((alarm[0] == 0) & (alarm[1] == 0) & (alarm[2] == 0) &(alarm[3] != 0))
+		{
+		indicator_alarm = alarm [3];
+		}
+		else
+		{
+		indicator_alarm = 0;
+		}
+		
+		
+		indicator_alarm = 0x21;
+		
+		if (indicator_alarm != 0)
+				{
+					HEX_digit(indicator_alarm >> 4, DIG1_Pin);
+					HEX_alarm(indicator_alarm & 15, DIG0_Pin);						
+			}
+		else
+				{
+					HEX_digit(addr >> 4, DIG1_Pin);
+					HEX_digit(addr & 15, DIG0_Pin);		
+				}
+		
+		
 	  // process high voltage button
 	  hv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
 
@@ -702,7 +737,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		
 		
-		
 		if(block==0)
 		{
 		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],12);//, 2000);
@@ -711,14 +745,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 		// Перезапуск сторожевого таймера
 //		HAL_WWDG_Refresh(&hwwdg);	
-		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect+1),arrI2c_R[lanSelect],11);//, 2000); 
+		RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect+1),arrI2c_R[lanSelect],12);//, 2000); 
+			alarm[0] = arrI2c_R[0][11];	
+			alarm[1] = arrI2c_R[1][11];
+			alarm[2] = arrI2c_R[2][11];
+			alarm[3] = arrI2c_R[3][11];
 		}
 	}
 	if(htim->Instance == TIM6)
 	{
-		HEX_digit(addr & 15, DIG0_Pin);
-	  HEX_digit(addr >> 4, DIG1_Pin);
-		
 		if(lanCurrent > _timeLanC)
 		{lanCurrent = 0;}
 		else 
@@ -775,8 +810,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //		{hvLoad = 0;}//Нужно наоборот
 //		else if ((modeHV==4) | (modeHV==8))
 //		{hvLoad = 1;}
-		
-		
 		
 		switch (modeHV)
     {
@@ -945,4 +978,4 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-//git 2
+// git

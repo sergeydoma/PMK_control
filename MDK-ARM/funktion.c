@@ -27,7 +27,30 @@ void HEX_digit(int digit, uint16_t pin)
 	HAL_GPIO_WritePin(GPIOC, pin, 1);
 
 	while(leds) {
-		us_delay(100); //200
+		us_delay(200);
+		leds &= (leds - 1);
+	}
+
+	HAL_GPIO_WritePin(GPIOC, pin, 0);
+}
+
+void HEX_alarm(int digit, uint16_t pin)
+{
+	static uint8_t LED7[16] = {
+				  0x73, 0x76, 0x5B, 0x4F,
+				  0x66, 0x6D, 0x7D, 0x07,
+				  0x7F, 0x6F, 0x77, 0x7C,
+				  0x39, 0x5E, 0x79, 0x71
+		  };                                                                                                                                                                                                                                                                          
+	uint8_t leds = LED7[digit & 15];
+
+	GPIOC->BRR = 0xff;
+	GPIOC->BSRR = (~leds) & 0xff;
+
+	HAL_GPIO_WritePin(GPIOC, pin, 1);
+
+	while(leds) {
+		us_delay(200);
 		leds &= (leds - 1);
 	}
 
