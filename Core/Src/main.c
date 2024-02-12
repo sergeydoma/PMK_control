@@ -233,8 +233,8 @@ while (1)
 	addr = ((~GPIOA->IDR & 0xff)&0xFC)+0x01;	//230724
 		
 	  // display current modbus address
-	  HEX_digit(addr & 15, DIG0_Pin);
-	  HEX_digit(addr >> 4, DIG1_Pin);
+//	  HEX_digit(addr & 15, DIG0_Pin);
+//	  HEX_digit(addr >> 4, DIG1_Pin);
 
 	  // process high voltage button
 	  hv = HAL_GPIO_ReadPin(SW_HV_GPIO_Port, SW_HV_Pin)==0;
@@ -702,6 +702,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		
 		
+		
 		if(block==0)
 		{
 		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],12);//, 2000);
@@ -715,6 +716,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	}
 	if(htim->Instance == TIM6)
 	{
+		HEX_digit(addr & 15, DIG0_Pin);
+	  HEX_digit(addr >> 4, DIG1_Pin);
+		
 		if(lanCurrent > _timeLanC)
 		{lanCurrent = 0;}
 		else 
@@ -771,6 +775,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //		{hvLoad = 0;}//Нужно наоборот
 //		else if ((modeHV==4) | (modeHV==8))
 //		{hvLoad = 1;}
+		
+		
 		
 		switch (modeHV)
     {

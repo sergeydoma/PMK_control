@@ -27,7 +27,7 @@ void HEX_digit(int digit, uint16_t pin)
 	HAL_GPIO_WritePin(GPIOC, pin, 1);
 
 	while(leds) {
-		us_delay(200);
+		us_delay(100); //200
 		leds &= (leds - 1);
 	}
 
