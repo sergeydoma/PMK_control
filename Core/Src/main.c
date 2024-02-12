@@ -257,7 +257,7 @@ while (1)
 		}
 		
 		
-		indicator_alarm = 0x21;
+		//		indicator_alarm = 0x21;   2 ошибка 1 авария / предупреждение
 		
 		if (indicator_alarm != 0)
 				{
