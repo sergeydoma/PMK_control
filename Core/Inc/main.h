@@ -148,4 +148,3 @@ void HEX_alarm(int digit, uint16_t pin);
 #endif
 
 #endif /* __MAIN_H */
-//gin
