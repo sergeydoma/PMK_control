@@ -65,6 +65,15 @@ extern "C" {
 #ifndef _timeMeasureVolt
 #define _timeMeasureVolt		70 // задержка на измерение напряжения
 #endif
+
+struct I2C_Module
+{
+  I2C_HandleTypeDef   instance;
+  uint16_t            sdaPin;
+  GPIO_TypeDef*       sdaPort;
+  uint16_t            sclPin;
+  GPIO_TypeDef*       sclPort;
+};
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -107,6 +116,10 @@ void Error_Handler(void);
 #define SEG4_GPIO_Port GPIOC
 #define SEG5_Pin GPIO_PIN_5
 #define SEG5_GPIO_Port GPIOC
+#define delay1_Pin GPIO_PIN_0
+#define delay1_GPIO_Port GPIOB
+#define delay2_Pin GPIO_PIN_1
+#define delay2_GPIO_Port GPIOB
 #define EN_HV_Pin GPIO_PIN_15
 #define EN_HV_GPIO_Port GPIOB
 #define SEG6_Pin GPIO_PIN_6
@@ -141,6 +154,10 @@ void us_delay(uint16_t d);
 void HEX_digit(int digit, uint16_t pin);
 _Bool timeDel(uint16_t time);
 void HEX_alarm(int digit, uint16_t pin);
+
+void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *hi2c, uint32_t timeout);
+
+static uint8_t wait_for_gpio_state_timeout(GPIO_TypeDef *port, uint16_t pin, GPIO_PinState state, uint8_t timeout);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -112,7 +112,9 @@ static void MX_TIM17_Init(void);
 void HAL_I2C_MasterTxCpltCallback()
 {
 //	RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 2, masterAddr, 3);
-//////	HAL_GPIO_WritePin(GPIOC, DIG0_Pin, 1);
+	HAL_GPIO_WritePin(delay2_GPIO_Port, delay2_Pin, 1);
+//	HAL_GPIO_WritePin(GPIOC, DIG0_Pin, 1);
+//	HAL_IWDG_Refresh(&hiwdg);
 	
 	block = 1;
 //	RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, 2,arrRes,5);//, 2000);
@@ -123,13 +125,16 @@ void HAL_I2C_MasterRxCpltCallback()
 {
 	HAL_IWDG_Refresh(&hiwdg);
 	
-//////	HAL_GPIO_WritePin(GPIOC, DIG0_Pin, 1);
+	
+	HAL_GPIO_WritePin(delay1_GPIO_Port, delay1_Pin, 1);
+//	HAL_GPIO_WritePin(GPIOC, DIG0_Pin, 1);
 	block = 0;
 //   HAL_I2C_Master_Transmit_IT(&hi2c2, (1<< 1),  masterAddr, 2);
 	for (int i=0; i<100; i++){}
 }
 void HAL_I2C_ErrorCallback()
 {
+	
 	block = 0;
 }
 /* USER CODE END 0 */
@@ -158,7 +163,12 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+	 __HAL_RCC_I2C1_CLK_ENABLE();
+  HAL_Delay(100);
+  __HAL_RCC_I2C1_FORCE_RESET();
+  HAL_Delay(100);
+  __HAL_RCC_I2C1_RELEASE_RESET();
+  HAL_Delay(100);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -224,6 +234,9 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
   /* USER CODE BEGIN WHILE */
 	HAL_TIM_Base_Start_IT(&htim16);
 	HAL_I2C_Mem_Read(&hi2c2, (uint16_t) I2C1_DEVICE_ADDRESS<<1, MEMORY_ADDRESS, 1, xBuffer, 4, 5); //read memory address 08
+
+	I2C_ClearBusyFlagErratum(&hi2c2, 1000);
+
 //	RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 2, masterAddr, 3);
 //if ((HAL_GPIO_ReadPin(A2_GPIO_Port, A2_Pin)==0))
 //{HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, 0);}
@@ -233,6 +246,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 
 while (1)
   {
+//		HAL_IWDG_Refresh(&hiwdg);
 
 //		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, bipolar);
 	
@@ -441,7 +455,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x00101D2D;
+  hi2c2.Init.Timing = 0xA000020A;
   hi2c2.Init.OwnAddress1 = 6;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -712,8 +726,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, Bipolar_Pin|HV_POL_Pin|HV_OUT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, EN_HV_Pin|P0_LED1_Pin|P0_LED2_Pin|P1_LED1_Pin
-                          |P1_LED2_Pin|MDI_G_Pin|MDI_Y_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, delay1_Pin|delay2_Pin|EN_HV_Pin|P0_LED1_Pin
+                          |P0_LED2_Pin|P1_LED1_Pin|P1_LED2_Pin|MDI_G_Pin
+                          |MDI_Y_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, LED_HV_GRN_Pin|LED_HV_RED_Pin, GPIO_PIN_RESET);
@@ -749,10 +764,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EN_HV_Pin P0_LED1_Pin P0_LED2_Pin P1_LED1_Pin
-                           P1_LED2_Pin MDI_G_Pin MDI_Y_Pin */
-  GPIO_InitStruct.Pin = EN_HV_Pin|P0_LED1_Pin|P0_LED2_Pin|P1_LED1_Pin
-                          |P1_LED2_Pin|MDI_G_Pin|MDI_Y_Pin;
+  /*Configure GPIO pins : delay1_Pin delay2_Pin EN_HV_Pin P0_LED1_Pin
+                           P0_LED2_Pin P1_LED1_Pin P1_LED2_Pin MDI_G_Pin
+                           MDI_Y_Pin */
+  GPIO_InitStruct.Pin = delay1_Pin|delay2_Pin|EN_HV_Pin|P0_LED1_Pin
+                          |P0_LED2_Pin|P1_LED1_Pin|P1_LED2_Pin|MDI_G_Pin
+                          |MDI_Y_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -775,7 +792,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],12);//, 2000);
 		}
-		else
+		if (block ==1)
 		{
 		// Перезапуск сторожевого таймера
 //		HAL_WWDG_Refresh(&hwwdg);	
@@ -786,12 +803,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			alarm[3] = arrI2c_R[3][11];
 		}
 		
+		if (WTF != HAL_OK)  //| (RTF !=HAL_OK)
+		{
+//			I2C_ClearBusyFlagErratum(&hi2c2, 1000);
+		}
+		
 		
 	}
 	
 	if(htim->Instance == TIM7)
 	{
-		
+//		if(block==0)
+//		{
+//		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],12);//, 2000);
+//		
+//		}
+//		else
+//		{
+//		// Перезапуск сторожевого таймера
+////		HAL_WWDG_Refresh(&hwwdg);	
+//			RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect+1),arrI2c_R[lanSelect],12);//, 2000); 
+//			alarm[0] = arrI2c_R[0][11];	
+//			alarm[1] = arrI2c_R[1][11];
+////			alarm[2] = arrI2c_R[2][11];
+////			alarm[3] = arrI2c_R[3][11];
+//		}
+//		
+//		if ((WTF != HAL_OK) | (RTF !=HAL_OK))
+//		{
+////			I2C_ClearBusyFlagErratum(&hi2c2, 1000);
+//		}
 		
 		
 	}
