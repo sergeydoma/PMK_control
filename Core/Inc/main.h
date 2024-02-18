@@ -74,6 +74,7 @@ struct I2C_Module
   uint16_t            sclPin;
   GPIO_TypeDef*       sclPort;
 };
+
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -158,6 +159,8 @@ void HEX_alarm(int digit, uint16_t pin);
 void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *hi2c, uint32_t timeout);
 
 static uint8_t wait_for_gpio_state_timeout(GPIO_TypeDef *port, uint16_t pin, GPIO_PinState state, uint8_t timeout);
+
+void I2C_ClearBusyFlagErratum1(struct I2C_Module* i2c);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

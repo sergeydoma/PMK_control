@@ -50,6 +50,9 @@ uint32_t delayHV = 0;
 //_Bool bipolar;
 uint32_t led_hv_dinamic = 0;
 uint8_t hvAllarm = 0;
+
+struct I2C_Module i2cm;
+
 //			_Bool hvLoad =0;
 //uint16_t hvLoadCurrent=0;
 /* USER CODE END PTD */
@@ -137,6 +140,8 @@ void HAL_I2C_ErrorCallback()
 	
 	block = 0;
 }
+
+
 /* USER CODE END 0 */
 
 /**
@@ -146,7 +151,16 @@ void HAL_I2C_ErrorCallback()
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	int i; 
+//__HAL_RCC_I2C1_FORCE_RESET();
+//HAL_Delay(1000);
+//__HAL_RCC_I2C1_RELEASE_RESET();
+	
+	int i;
+	i2cm.instance = hi2c2;
+	i2cm.sclPin = GPIO_PIN_10;
+	i2cm.sclPort = GPIOB;
+	i2cm.sdaPin = GPIO_PIN_11;
+	i2cm.sdaPort = GPIOB;
 	
   /* USER CODE END 1 */
 
@@ -163,11 +177,11 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-	 __HAL_RCC_I2C1_CLK_ENABLE();
+	 __HAL_RCC_I2C2_CLK_ENABLE();
   HAL_Delay(100);
-  __HAL_RCC_I2C1_FORCE_RESET();
+  __HAL_RCC_I2C2_FORCE_RESET();
   HAL_Delay(100);
-  __HAL_RCC_I2C1_RELEASE_RESET();
+  __HAL_RCC_I2C2_RELEASE_RESET();
   HAL_Delay(100);
   /* USER CODE END SysInit */
 
@@ -235,7 +249,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 	HAL_TIM_Base_Start_IT(&htim16);
 	HAL_I2C_Mem_Read(&hi2c2, (uint16_t) I2C1_DEVICE_ADDRESS<<1, MEMORY_ADDRESS, 1, xBuffer, 4, 5); //read memory address 08
 
-	I2C_ClearBusyFlagErratum(&hi2c2, 1000);
+//	I2C_ClearBusyFlagErratum(&hi2c2, 1000);
 
 //	RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 2, masterAddr, 3);
 //if ((HAL_GPIO_ReadPin(A2_GPIO_Port, A2_Pin)==0))
@@ -791,6 +805,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if(block==0)
 		{
 		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],12);//, 2000);
+		}
+		if (WTF != HAL_OK)
+		{
+//			HAL_Delay(10);
+//			 I2C_ClearBusyFlagErratum1(&i2cm);
+//			HAL_Delay();
 		}
 		if (block ==1)
 		{
