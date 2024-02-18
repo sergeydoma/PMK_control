@@ -275,3 +275,4 @@ void I2C_ClearBusyFlagErratum1(struct I2C_Module* i2c)
   HAL_I2C_Init(&(i2c->instance));
   HAL_Delay(1);
 }
+//git
