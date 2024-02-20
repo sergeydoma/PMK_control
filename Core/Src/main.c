@@ -803,7 +803,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if(block==0)
 		{
 //		uint8_t addr;
-		addrIIc = (lanSelect+1)*2;
+		addrIIc = (lanSelect+1)<<1;
 			
 		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, addrIIc , arrI2c_T[lanSelect],12);//, 2000);  (lanSelect+1)
 		}
