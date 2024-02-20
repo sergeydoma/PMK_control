@@ -29,6 +29,7 @@
 
 HAL_StatusTypeDef RTF; // test i2c
 HAL_StatusTypeDef WTF; // test i2c	
+HAL_StatusTypeDef ErrorTF; // test i2c	
 volatile uint8_t arrI2c[10] = {0, 0, 0};
 uint8_t arrI2c_R[4][12];
 uint32_t addr;
@@ -52,6 +53,10 @@ uint32_t led_hv_dinamic = 0;
 uint8_t hvAllarm = 0;
 
 struct I2C_Module i2cm;
+
+char AAR; 
+
+uint8_t addrIIc;
 
 //			_Bool hvLoad =0;
 //uint16_t hvLoadCurrent=0;
@@ -129,6 +134,7 @@ void HAL_I2C_MasterRxCpltCallback()
 }
 void HAL_I2C_ErrorCallback()
 {
+	ErrorTF = HAL_I2C_GetError(&hi2c2);
 	
 	block = 0;
 }
@@ -461,7 +467,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x00208FF9;
+  hi2c2.Init.Timing = 0x00201D2B;
   hi2c2.Init.OwnAddress1 = 6;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -796,7 +802,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		if(block==0)
 		{
-		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, (lanSelect+1), arrI2c_T[lanSelect],12);//, 2000);
+//		uint8_t addr;
+		addrIIc = (lanSelect+1)*2;
+			
+		WTF = HAL_I2C_Master_Transmit_DMA(&hi2c2, addrIIc , arrI2c_T[lanSelect],12);//, 2000);  (lanSelect+1)
 		}
 		if (WTF != HAL_OK)
 		{
@@ -808,11 +817,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 		// Перезапуск сторожевого таймера
 //		HAL_WWDG_Refresh(&hwwdg);	
-			RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, (lanSelect+1),arrI2c_R[lanSelect],12);//, 2000); 
+			RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, addrIIc,arrI2c_R[lanSelect],12);//, 2000); lanSelect+1
+			if (RTF == HAL_OK)
+			{
 			alarm[0] = arrI2c_R[0][11];	
 			alarm[1] = arrI2c_R[1][11];
 			alarm[2] = arrI2c_R[2][11];
 			alarm[3] = arrI2c_R[3][11];
+			}
 		}
 		
 		if (WTF != HAL_OK)  //| (RTF !=HAL_OK)
