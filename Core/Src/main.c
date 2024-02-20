@@ -114,26 +114,18 @@ static void MX_TIM17_Init(void);
 /* USER CODE BEGIN 0 */
 void HAL_I2C_MasterTxCpltCallback()
 {
-//	RTF = HAL_I2C_Master_Transmit_IT(&hi2c2, 2, masterAddr, 3);
+
 	HAL_GPIO_WritePin(delay2_GPIO_Port, delay2_Pin, 1);
-//	HAL_GPIO_WritePin(GPIOC, DIG0_Pin, 1);
-//	HAL_IWDG_Refresh(&hiwdg);
-	
+	for (int i=0; i<100; i++){__ASM("nop");}	
 	block = 1;
-//	RTF = HAL_I2C_Master_Receive_DMA(&hi2c2, 2,arrRes,5);//, 2000);
-//	for (int i=0; i<200; i++){}
-//  HAL_I2C_Master_Receive_IT(&hi2c2, (1<< 1),  arrI2c, 2);
+
 }
 void HAL_I2C_MasterRxCpltCallback()
 {
-	HAL_IWDG_Refresh(&hiwdg);
-	
-	
+	HAL_IWDG_Refresh(&hiwdg);	
 	HAL_GPIO_WritePin(delay1_GPIO_Port, delay1_Pin, 1);
-//	HAL_GPIO_WritePin(GPIOC, DIG0_Pin, 1);
-	block = 0;
-//   HAL_I2C_Master_Transmit_IT(&hi2c2, (1<< 1),  masterAddr, 2);
-	for (int i=0; i<100; i++){}
+	for (int i=0; i<100; i++){__ASM("nop");}
+	block = 0;	
 }
 void HAL_I2C_ErrorCallback()
 {
@@ -469,7 +461,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0xA000020A;
+  hi2c2.Init.Timing = 0x00208FF9;
   hi2c2.Init.OwnAddress1 = 6;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -808,9 +800,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		if (WTF != HAL_OK)
 		{
-//			HAL_Delay(10);
+//				for (int i=0; i <1000; i++){__ASM("nop");}
 //			 I2C_ClearBusyFlagErratum1(&i2cm);
-//			HAL_Delay();
+//				for (int i=0; i <1000; i++){__ASM("nop");}
 		}
 		if (block ==1)
 		{
@@ -1084,4 +1076,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-//git
