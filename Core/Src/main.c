@@ -57,6 +57,8 @@ struct I2C_Module i2cm;
 char AAR; 
 
 uint8_t addrIIc;
+uint16_t filtr = 0;
+uint16_t filtrDelay = 100; // фильтр по авариям ii2
 
 //			_Bool hvLoad =0;
 //uint16_t hvLoadCurrent=0;
@@ -267,23 +269,31 @@ while (1)
 	  // display current modbus address
 	  if ((alarm[0] != 0) & (alarm[1] == 0) & (alarm[2] == 0) &(alarm[3] == 0))
 		{
-		indicator_alarm = alarm[0];
+		indicator_alarm = alarm[0]; filtr =0;
 		}
 		else if ((alarm[0] == 0) & (alarm[1] != 0) & (alarm[2] == 0) &(alarm[3] == 0))
 		{
-		indicator_alarm = alarm[1];
+		indicator_alarm = alarm[1]; filtr =0;
 		}
 		else if ((alarm[0] == 0) & (alarm[1] == 0) & (alarm[2] != 0) &(alarm[3] == 0))
 		{
-		indicator_alarm = alarm[2];
+		indicator_alarm = alarm[2]; filtr =0;
 		}
 		else if ((alarm[0] == 0) & (alarm[1] == 0) & (alarm[2] == 0) &(alarm[3] != 0))
 		{
-		indicator_alarm = alarm [3];
+		indicator_alarm = alarm [3]; filtr =0;
 		}
 		else
 		{
-		indicator_alarm = 0;
+			
+			if (filtr > filtrDelay )
+			{
+			indicator_alarm = 0;
+			}
+			else
+			{
+			 filtr ++;
+			}
 		}
 		
 		
@@ -467,7 +477,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x00201D2B;
+  hi2c2.Init.Timing = 0xA000020A;
   hi2c2.Init.OwnAddress1 = 6;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -826,6 +836,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			alarm[3] = arrI2c_R[3][11];
 			}
 		}
+		
 		
 		if (WTF != HAL_OK)  //| (RTF !=HAL_OK)
 		{
