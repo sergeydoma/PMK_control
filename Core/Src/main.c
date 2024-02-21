@@ -129,7 +129,7 @@ void HAL_I2C_MasterTxCpltCallback()
 }
 void HAL_I2C_MasterRxCpltCallback()
 {
-	HAL_IWDG_Refresh(&hiwdg);	
+//	HAL_IWDG_Refresh(&hiwdg);	
 	HAL_GPIO_WritePin(delay1_GPIO_Port, delay1_Pin, 1);
 	for (int i=0; i<100; i++){__ASM("nop");}
 	block = 0;	
@@ -260,7 +260,7 @@ HAL_GPIO_WritePin(LED_HV_GRN_GPIO_Port, LED_HV_GRN_Pin, 1);
 
 while (1)
   {
-//		HAL_IWDG_Refresh(&hiwdg);
+		HAL_IWDG_Refresh(&hiwdg);
 
 //		HAL_GPIO_WritePin(Bipolar_GPIO_Port, Bipolar_Pin, bipolar);
 	
@@ -525,7 +525,7 @@ static void MX_IWDG_Init(void)
 
   /* USER CODE END IWDG_Init 1 */
   hiwdg.Instance = IWDG;
-  hiwdg.Init.Prescaler = IWDG_PRESCALER_64;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
   hiwdg.Init.Window = 4095;
   hiwdg.Init.Reload = 4095;
   if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
